@@ -1,4 +1,5 @@
 import AuthModel from "../models/auth.js";
+import serverClient from "../config/stream.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import OTPModel from "../models/otp.js";
@@ -9,12 +10,20 @@ dotenv.config();
 
 export const register = async (req, res) => {
     try {
-        const { userName, email, password, gender, age, location,otp } = req.body;
-        if (!userName || !email || !password || !gender || !age || !location || !otp) {
+        const { name, email, password, dateOfBirth, gender, phone, otp } = req.body;
+        if (!name || !email || !password || !gender || !phone || !dateOfBirth || !otp) {
             return res.status(400).json({
                 message: "All fields are required",
             })
         }
+
+        const profile = req.file;
+        if (!profile) {
+            return res.status(400).json({
+                message: "Profile is required",
+            })
+        }
+        const file = profile.path;
 
         const existingUser = await AuthModel.findOne({ email });
         if (existingUser) {
@@ -31,7 +40,7 @@ export const register = async (req, res) => {
                 success: false,
                 message: "The OTP is not valid",
             });
-        } else if (otp !== response[0].otp) { 
+        } else if (otp !== response[0].otp) {
             return res.status(400).json({
                 success: false,
                 message: "The OTP is not valid",
@@ -41,18 +50,28 @@ export const register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await AuthModel.create({
-            userName,
+            name,
             email,
             password: hashedPassword,
+            dateOfBirth,
             gender,
-            age,
-            location,
+            phone,
+            profile: file,
         })
+
+        await serverClient.upsertUser({
+            id: user._id.toString(),
+            name: user.userName,
+            image: `https://ui-avatars.com/api/?name=${user.userName}`,
+        });
+
+        const streamToken = serverClient.createToken(user._id.toString());
 
         return res.status(201).json({
             success: false,
             message: "User registered successfully",
             data: user,
+            streamToken
         })
 
     } catch (error) {
@@ -100,11 +119,15 @@ export const login = async (req, res) => {
                 expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
                 httpOnly: true,
             }
+
+            const streamToken = serverClient.createToken(user._id.toString());
+
             res.cookie("token", token, options).status(200).json({
                 success: true,
-                token,
-                user,
                 message: `User Login Success`,
+                user,
+                token,
+                streamToken,
             })
         } else {
             return res.status(401).json({

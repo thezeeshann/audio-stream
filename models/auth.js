@@ -31,12 +31,8 @@ const AuthSchema = new mongoose.Schema({
         required: true,
     },
     profile: {
-        type: Number,
+        type: String,
         required: true,
-    },
-    approved: {
-        type: Boolean,
-        default: true,
     },
 
 },
