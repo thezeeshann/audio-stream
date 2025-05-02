@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import OTPModel from "../models/otp.js";
 import otpGenerator from "otp-generator"
 import dotenv from "dotenv";
+import { json } from "express";
 dotenv.config();
 
 
@@ -61,8 +62,8 @@ export const register = async (req, res) => {
 
         await serverClient.upsertUser({
             id: user._id.toString(),
-            name: user.userName,
-            image: `https://ui-avatars.com/api/?name=${user.userName}`,
+            name: user.name,
+            profile: `https://ui-avatars.com/api/?name=${user.name}`,
         });
 
         const streamToken = serverClient.createToken(user._id.toString());
@@ -186,6 +187,87 @@ export const sendOTP = async (req, res) => {
         })
 
     } catch (error) {
-
+        return res.status(400).json({
+            success: false,
+            message: message.error,
+        });
     }
 }
+
+
+export const getUsers = async (req, res) => {
+    try {
+        const users = await AuthModel.find()
+        if (!users) {
+            return res.status(), json({
+                success: false,
+                message: "users not found"
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            data: users
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+        })
+    }
+}
+
+
+export const getSingleUser = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+        const user = await AuthModel.findById(id)
+
+        if (!user) {
+            return res.status().json({
+                success: false,
+                message: "user not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: user
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+        })
+    }
+}
+
+
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await AuthModel.findById(id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        await AuthModel.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted successfully",
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+};

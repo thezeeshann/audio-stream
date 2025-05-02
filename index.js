@@ -1,6 +1,8 @@
 import express from "express"
 import dotenv from "dotenv"
 import authRouter from "./routes/auth.js"
+import messageRoute from "./routes/message.js"
+import createRoomRoute from "./routes/room.js"
 import { connectDB } from "./config/db.js"
 import cookieParser from "cookie-parser"
 dotenv.config()
@@ -23,6 +25,8 @@ app.use(cookieParser());
 })();
 
 app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/message", messageRoute)
+app.use("/api/v1/create", createRoomRoute)
 
 app.get("/", (req, res) => {
     return res.json({
