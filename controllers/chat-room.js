@@ -13,8 +13,21 @@ export const createRoom = async (req, res) => {
 
         await channel.create();
 
-        return res.status(201).json({ success: true, channel });
+        // Only send back safe data
+        return res.status(201).json({
+            success: true,
+            data: {
+                id: channel.id,
+                cid: channel.cid,
+                type: channel.type,
+                members: channel.state.members,
+            },
+            message: 'Room created successfully',
+        });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        return res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
 };
