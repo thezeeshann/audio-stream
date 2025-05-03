@@ -13,6 +13,7 @@ const port = process.env.PORT
 
 app.use(express.json())
 app.use(cookieParser());
+app.use('/uploads', express.static('uploads'));
 
 
 (async () => {

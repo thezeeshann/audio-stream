@@ -1,4 +1,5 @@
 import FollowModel from "../models/follow.js";
+import AuthModel  from "../models/auth.js"
 
 // Follow a user
 export const followUser = async (req, res) => {
@@ -98,3 +99,21 @@ export const getFollowing = async (req, res) => {
         });
     }
 };
+
+export const getDiscoverUsers = async (req, res) => {
+    try {
+      const currentUserId = req.params.userId;
+  
+      const followingDocs = await FollowModel.find({ followerId: currentUserId });
+      const followingIds = followingDocs.map(f => f.followingId.toString());
+  
+      const usersToShow = await AuthModel.find({
+        _id: { $nin: [...followingIds, currentUserId] }
+      }).select("name profile");
+  
+      res.status(200).json(usersToShow);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to fetch discover users" });
+    }
+  };
