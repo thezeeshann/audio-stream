@@ -2,7 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import authRouter from "./routes/auth.js"
 import messageRoute from "./routes/message.js"
-import createRoomRoute from "./routes/room.js"
+import roomRoute from "./routes/room.js"
 import followUserRoute  from "./routes/follow.js"
 import { connectDB } from "./config/db.js"
 import cookieParser from "cookie-parser"
@@ -28,7 +28,7 @@ app.use('/uploads', express.static('uploads'));
 
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/message", messageRoute)
-app.use("/api/v1/create", createRoomRoute)
+app.use("/api/v1/room", roomRoute)
 app.use("/api/v1/follow", followUserRoute)
 
 app.get("/", (req, res) => {
